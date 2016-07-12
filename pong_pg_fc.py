@@ -75,6 +75,8 @@ def build_agent(_x):
 	cost, sampled_y = build_fcnet(_x, N_IN, N_FC1, N_OUT)
 	params = tf.trainable_variables()
 	grads = tf.gradients(cost, params)
+	print "grads length: ", len(grads)
+	print "grads shape: ", grads[0].get_shape()
 	# global_step = tf.Variable(0, name="global_step", trainable=False)
 	# optimizer = tf.train.AdamOptimizer(1e-4)
 	# grads_and_vars = optimizer.compute_gradients(cost)
@@ -134,12 +136,15 @@ def one_episode(env, observation, episode_number):
 
 _x = tf.placeholder(tf.float32, [None, IM_SIZE])
 sampled_y, grads = build_agent(_x)
+allvars = tf.trainable_variables()
 
-sess = tf.Session()
 global_step = tf.Variable(0, name="global_step", trainable=False)
 optimizer = tf.train.AdamOptimizer(1e-4)
+# optimizer = tf.train.RMSPropOptimizer(1e-4)
+init_op = tf.initialize_all_variables()
 
-sess.run(tf.initialize_all_variables())
+sess = tf.Session()
+sess.run(init_op)
 
 env = gym.make("Pong-v0")
 observation = env.reset()
@@ -168,8 +173,15 @@ while True:
 		for _idx in range(len(batch_grads)):
 			batch_grads_tf.append(tf.convert_to_tensor(tot_gs_prod[_idx]))
 		# Apply batch gradients
-		sess.run(optimizer.apply_gradients(zip(batch_grads_tf, allvars), global_step=global_step))
-		batch_idx == 0
+		print "batch grads length: ", len(batch_grads_tf)
+		print "batch grads shape: ", type(batch_grads_tf[0]), batch_grads_tf[0].get_shape()
+		train_op = optimizer.apply_gradients(zip(batch_grads_tf, allvars), global_step=global_step)
+		if episode_number == BATCH_SIZE:
+			# uninit_vars = tf.report_uninitialized_variables()
+			# sess.run(tf.initialize_variables(list(tf.get_variable(name) for name in sess.run(tf.report_uninitialized_variables(tf.all_variables())))))
+			sess.run(tf.initialize_variables([_v for _v in tf.all_variables() if _v not in allvars]))
+		sess.run(train_op)
+		batch_idx = 0
 	else:
 		batch_idx += 1
 	
