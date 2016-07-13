@@ -171,7 +171,7 @@ while True:
 	if episode_number % BATCH_SIZE == 0:
 		batch_grads_tf = []
 		for _idx in range(len(batch_grads)):
-			batch_grads_tf.append(tf.convert_to_tensor(tot_gs_prod[_idx]))
+			batch_grads_tf.append(tf.convert_to_tensor(batch_grads[_idx]))
 		# Apply batch gradients
 		print "batch grads length: ", len(batch_grads_tf)
 		print "batch grads shape: ", type(batch_grads_tf[0]), batch_grads_tf[0].get_shape()
